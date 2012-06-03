@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>php-rcon</title>
+		<meta name="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript" src="assets/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" src="assets/jquery.console.js"></script>
+		<link rel="stylesheet" href="assets/style.css" />
+	</head>
+
+	<body>
+		<div id="brr">
+			<div id="container">
+				<div id="header">
+					php-rcon
+				</div>
+
+				<div id="servinfo" class="center">
+					<form id="sinf">
+						<span class="label">Server address</span>
+						<input type="text" id="addr" placeholder="IP/Hostname" /> :
+						<input type="text" id="port" placeholder="Port" /><br /><br />
+						<span class="label">Rcon password</span>
+						<input type="text" id="rpw" placeholder="Password" /><br /><br />
+						<input type="submit" id="submit" value="GO" />
+					</form>
+				</div>
+
+				<div id="console" class="center" style="display:none;" >
+					<span id="addrlabel"></span><span id="right"><a id="clear">Clear output</a> | <a id="change">Change server info</a></span><br />
+					<div id="commoncmds">
+						<br />
+						<code>status</code>
+						<code>sv_hostname</code>
+						<code>mapname</code>
+						<code>rconpassword</code>
+						<code>g_gametype</code>
+						<code>clientlist</code>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			$(document).ready(function(){
+				var addr = "";
+				var p = 0;
+				var rpw = "";
+				$("#sinf").submit( function(event) {
+					event.preventDefault();
+					addr = $("#addr").val();
+					rpw = $("#rpw").val();
+					p = $("#port").val();
+					$("#addrlabel").html(addr + ":" + p);
+					$("#servinfo").slideUp(200);
+					$("#console").slideDown(200);
+					$("#console").focus();
+				});
+
+				var console = $('<div class="console">');
+				$(console).insertBefore("#commoncmds");
+				var controller = console.console({
+					promptLabel: 'rcon> ',
+					commandValidate:function(line){
+						if (line == "") return false;
+						else if (line == "exit") {
+							controller.reset();
+							$("#console").slideUp(200);
+							$("#servinfo").slideDown(200);
+							$("#addr").focus();
+							return false;
+						} else if (line == "clear") {
+							controller.reset();
+							return false;
+						}
+						else return true;
+					},
+
+					commandHandle:function(line,report){
+						$.get("rcon.php", {address: addr, port: p, pw: rpw, command: line}, function(data) {
+							report(data);
+						});
+					},
+					animateScroll:true,
+					promptHistory:true
+				});
+		
+				$("#change").click( function() {
+					controller.reset();
+					$("#console").slideUp(200);
+					$("#servinfo").slideDown(200);
+					$("#addr").focus();
+				});
+
+				$("#clear").click( function() {
+					controller.reset();
+				});
+
+				$("code").click( function() {
+					controller.typer.consoleInsert($(this).html());
+					controller.send();
+					$(".console").focus();
+				});
+			});
+		</script>
+	</body>
+</html>
